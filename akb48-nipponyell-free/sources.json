@@ -1,16 +1,29 @@
+
 [
+  {
+    "type": "website",
+    "url": "https://www.zennoh.or.jp/nippon-yell/topics/index.html",
+    "enabled": true,
+    "note": "ニッポンエール公式お知らせ一覧。AKB48関連告知を含む"
+  },
   {
     "type": "website",
     "url": "https://www.zennoh.or.jp/",
     "enabled": true,
-    "note": "公式トップページ。各県本部・各地域JAのニュース一覧URLを追加してください"
+    "note": "JA全農公式トップページ"
+  },
+  {
+    "type": "website",
+    "url": "https://www.nn.zennoh.or.jp/",
+    "enabled": true,
+    "note": "JA全農長野公式サイト"
   },
   {
     "type": "bluesky",
-    "url": "https://api.bsky.app/",
+    "url": "https://public.api.bsky.app/",
     "query": "ニッポンエール AKB48",
     "allowed_handles": [],
     "enabled": false,
-    "note": "JA公式アカウントのhandleを検証してから登録・有効化。空欄で有効化すると一般投稿も候補になります"
+    "note": "公式アカウントを確認するまで無効"
   }
 ]
