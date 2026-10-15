@@ -1,3 +1,7 @@
+"""Official-source AKB48 x Nippon Yell news collector.
+
+Candidates are *leads for review*, never confirmed appearances.
+"""
 import datetime
 import json
 import re
@@ -15,89 +19,141 @@ ROOT = Path(__file__).resolve().parent
 DATA = ROOT / 'data'
 DATA.mkdir(exist_ok=True)
 SOURCES = json.loads((ROOT / 'sources.json').read_text(encoding='utf-8'))
-HEADERS = {'User-Agent': 'AKB48-NipponYell-PersonalTracker/1.2 (public pages only)'}
+USER_AGENT = 'AKB48-NipponYell-PersonalTracker/1.3 (public pages only)'
 MAX_PAGES_PER_SOURCE = 35
 MAX_DEPTH = 2
-PREFS = ('北海道 青森 岩手 宮城 秋田 山形 福島 茨城 栃木 群馬 埼玉 千葉 東京 神奈川 新潟 富山 石川 福井 山梨 長野 岐阜 静岡 愛知 三重 滋賀 京都 大阪 兵庫 奈良 和歌山 鳥取 島根 岡山 広島 山口 徳島 香川 愛媛 高知 福岡 佐賀 長崎 熊本 大分 宮崎 鹿児島 沖縄').split()
-EVENT_WORDS = ('イベント', '開催', '来場', '登場', '出演', '訪問', '巡回', 'キャラバン', '会場', 'ニッポンエール号')
-LINK_WORDS = ('akb48', 'ニッポンエール', 'お知らせ', 'ニュース', 'イベント', 'トピックス', 'press', 'news', 'topic', 'event', 'もっと見る', '詳細', '一覧')
+PREFS = ('北海道 青森 岩手 宮城 秋田 山形 福島 茨城 栃木 群馬 埼玉 千葉 東京 神奈川 '
+         '新潟 富山 石川 福井 山梨 長野 岐阜 静岡 愛知 三重 滋賀 京都 大阪 兵庫 奈良 '
+         '和歌山 鳥取 島根 岡山 広島 山口 徳島 香川 愛媛 高知 福岡 佐賀 長崎 熊本 '
+         '大分 宮崎 鹿児島 沖縄').split()
+EVENT_WORDS = ('イベント', '開催', '来場', '登場', '出演', '訪問', '巡回', 'キャラバン', '会場', 'ニッポンエール号', 'お渡し会', 'トークショー')
+LINK_WORDS = ('akb48', 'ニッポンエール', 'お知らせ', 'ニュース', 'イベント', 'トピックス',
+              'press', 'news', 'topic', 'event', 'もっと見る', '詳細', '一覧')
+DATE_PATTERN = re.compile(r'(?:(20\d{2})\s*[年/.-]\s*)?(\d{1,2})\s*[月/.-]\s*(\d{1,2})\s*日?')
 
 
-def load(name, default):
+def read_json(name, fallback):
     try:
         return json.loads((DATA / name).read_text(encoding='utf-8'))
-    except (FileNotFoundError, ValueError):
-        return default
+    except (OSError, ValueError):
+        return fallback
 
 
-def save(name, obj):
-    (DATA / name).write_text(json.dumps(obj, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+def write_json(name, data):
+    (DATA / name).write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 
-def normalized_text(value):
-    return unicodedata.normalize('NFKC', value or '').casefold()
+def norm(s):
+    return unicodedata.normalize('NFKC', s or '').casefold()
 
 
-def related(value):
-    text = normalized_text(value)
-    return 'akb48' in text and ('ニッポンエール' in text or 'にっぽんエール' in text or 'nippon yell' in text)
+def related(s):
+    s = norm(s)
+    return 'akb48' in s and ('ニッポンエール' in s or 'にっぽんエール' in s or 'nippon yell' in s)
 
 
-def normalize_url(url):
+def clean_url(url):
     p = urllib.parse.urlsplit(url)
     return urllib.parse.urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path or '/', p.query, ''))
 
 
-def classify(text):
-    dates = list(dict.fromkeys(re.findall(r'(?:20\d{2}[年/.-])?\s*\d{1,2}\s*[月/.-]\s*\d{1,2}\s*日?', text)))[:8]
-    prefectures = [p for p in PREFS if p in text]
-    return {'dates_mentioned': dates, 'prefectures_mentioned': prefectures, 'members': [], 'status': '要確認'}
+def is_listing(url):
+    path = urllib.parse.urlsplit(url).path.lower().rstrip('/')
+    return path.endswith('/index.html') or path.endswith('/newitems') or path in ('', '/')
 
 
-def extract_page(soup):
+def page_parts(soup):
     title = soup.title.get_text(' ', strip=True) if soup.title else ''
-    for tag in soup(['script', 'style', 'nav', 'footer', 'header']):
-        tag.decompose()
-    main = soup.find('article') or soup.find('main') or soup.body or soup
-    return title, main.get_text(' ', strip=True)[:18000]
+    for node in soup(['script', 'style', 'nav', 'footer', 'header']):
+        node.decompose()
+    body = soup.find('article') or soup.find('main') or soup.body or soup
+    text = body.get_text(' ', strip=True)
+    return title, text[:20000]
+
+
+def classify(title, text):
+    normalized = norm(title + ' ' + text)
+    dates = []
+    for match in DATE_PATTERN.finditer(normalized):
+        y, m, d = match.groups()
+        try:
+            if y:
+                date = datetime.date(int(y), int(m), int(d)).isoformat()
+            else:
+                datetime.date(2024, int(m), int(d))
+                date = f'{int(m):02d}-{int(d):02d} (年不明)'
+            if date not in dates:
+                dates.append(date)
+        except ValueError:
+            pass
+    if '出演' in normalized or '来場' in normalized or '登場' in normalized:
+        category = '出演関連の可能性・要確認'
+    elif any(word in normalized for word in EVENT_WORDS):
+        category = 'イベント関連の可能性・要確認'
+    else:
+        category = '関連ニュース'
+    return {
+        'category': category,
+        'dates_mentioned': dates[:12],
+        'prefectures_mentioned': [p for p in PREFS if p in normalized],
+        'members': [],
+        'status': '要確認',
+        'appearance_confirmed': False,
+        'event_date': None,
+        'venue': None,
+    }
 
 
 def main():
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).isoformat(timespec='seconds')
-    old = {x['url']: x for x in load('candidates.json', []) if isinstance(x, dict) and x.get('url')}
-    found, errors = {}, []
-    stats = {'pages_checked': 0, 'posts_checked': 0, 'sources_enabled': 0}
+    previous = {item['url']: item for item in read_json('candidates.json', [])
+                if isinstance(item, dict) and item.get('url')}
+    found = {}
+    errors = []
+    stats = {'pages_checked': 0, 'posts_checked': 0, 'sources_enabled': 0,
+             'listing_pages_skipped': 0}
     session = requests.Session()
-    session.headers.update(HEADERS)
-    robots_cache = {}
+    session.headers.update({'User-Agent': USER_AGENT})
+    robot_rules = {}
 
     def allowed(url):
-        parts = urllib.parse.urlsplit(url)
-        if parts.scheme != 'https':
+        parsed = urllib.parse.urlsplit(url)
+        if parsed.scheme != 'https':
             return False
-        host = parts.netloc.lower()
-        if host not in robots_cache:
-            parser = urllib.robotparser.RobotFileParser()
-            parser.set_url(f'https://{host}/robots.txt')
+        host = parsed.netloc.lower()
+        if host not in robot_rules:
             try:
-                response = session.get(f'https://{host}/robots.txt', timeout=12)
-                if response.status_code == 404:
-                    robots_cache[host] = None
-                elif response.ok:
-                    parser.parse(response.text.splitlines())
-                    robots_cache[host] = parser
+                res = session.get(f'https://{host}/robots.txt', timeout=12)
+                if res.status_code == 404:
+                    robot_rules[host] = None
+                elif res.ok:
+                    rp = urllib.robotparser.RobotFileParser()
+                    rp.parse(res.text.splitlines())
+                    robot_rules[host] = rp
                 else:
-                    robots_cache[host] = False
+                    robot_rules[host] = False
             except requests.RequestException:
-                robots_cache[host] = False
-        rule = robots_cache[host]
-        return rule is None or (rule is not False and rule.can_fetch(HEADERS['User-Agent'], url))
+                robot_rules[host] = False
+        rule = robot_rules[host]
+        return rule is None or (rule is not False and rule.can_fetch(USER_AGENT, url))
 
-    def record(url, title, source, kind, text):
-        prior = old.get(url, {})
-        found[url] = {**prior, 'title': title[:220] or url, 'url': url, 'source_type': kind,
-                      'source': source, 'first_seen': prior.get('first_seen', now),
-                      'last_seen': now, **classify(text)}
+    def record(url, title, text, source, kind):
+        prior = previous.get(url, {})
+        data = classify(title, text)
+        found[url] = {
+            **prior,
+            'title': title[:220] or url,
+            'url': url,
+            'source_type': kind,
+            'source': source,
+            'first_seen': prior.get('first_seen', now),
+            'last_seen': now,
+            **data,
+        }
+        # Preserve manually verified event information if present.
+        if prior.get('appearance_confirmed') is True:
+            for key in ('appearance_confirmed', 'event_date', 'venue', 'members', 'status'):
+                found[url][key] = prior.get(key)
 
     for source in SOURCES:
         if not source.get('enabled', True):
@@ -111,8 +167,8 @@ def main():
             if not start.startswith('https://'):
                 errors.append({'source': start, 'error': 'HTTPS URL required'})
                 continue
-            base_host = urllib.parse.urlsplit(start).netloc.lower()
-            queue = deque([(normalize_url(start), 0)])
+            host = urllib.parse.urlsplit(start).netloc.lower()
+            queue = deque([(clean_url(start), 0)])
             visited = set()
             while queue and len(visited) < MAX_PAGES_PER_SOURCE:
                 url, depth = queue.popleft()
@@ -124,34 +180,33 @@ def main():
                     print(f'[SKIP] robots.txt: {url}', flush=True)
                     continue
                 try:
-                    response = session.get(url, timeout=18)
-                    response.raise_for_status()
-                    if 'html' not in response.headers.get('Content-Type', '').lower():
+                    res = session.get(url, timeout=18)
+                    res.raise_for_status()
+                    if 'html' not in res.headers.get('Content-Type', '').lower():
                         continue
-                    # Decode HTML from bytes. BeautifulSoup reads HTML charset metadata;
-                    # apparent_encoding is used only if the page does not declare one.
-                    soup = BeautifulSoup(response.content, 'html.parser', from_encoding='utf-8')
-                    title, text = extract_page(soup)
+                    # Parse UTF-8 bytes, not requests' potentially incorrect text encoding.
+                    soup = BeautifulSoup(res.content, 'html.parser', from_encoding='utf-8')
+                    title, text = page_parts(soup)
                     stats['pages_checked'] += 1
-                    combined = title + ' ' + text
-                    has_akb = 'akb48' in normalized_text(combined)
-                    has_yell = 'ニッポンエール' in normalized_text(combined) or 'にっぽんエール' in normalized_text(combined)
-                    print(f'[PAGE] {url} | TITLE: {title[:95]} | AKB48: {has_akb} | ニッポンエール: {has_yell}', flush=True)
-                    # This is only a candidate, not a confirmed member appearance.
-                    if related(combined) and any(word in normalized_text(combined) for word in EVENT_WORDS):
-                        record(url, title, start, 'JA公式サイト', text)
+                    content = title + ' ' + text
+                    normalized = norm(content)
+                    print(f'[PAGE] {url} | TITLE: {title[:95]} | AKB48: {"akb48" in normalized} | ニッポンエール: {"ニッポンエール" in normalized}', flush=True)
+                    if is_listing(url):
+                        stats['listing_pages_skipped'] += 1
+                        print(f'[LISTING] not a candidate: {url}', flush=True)
+                    elif related(content):
+                        record(url, title, text, start, 'JA公式サイト')
                         print(f'[CANDIDATE] {url}', flush=True)
                     if depth < MAX_DEPTH:
-                        for anchor in soup.find_all('a', href=True):
-                            href = normalize_url(urllib.parse.urljoin(url, anchor['href']))
+                        for a in soup.find_all('a', href=True):
+                            href = clean_url(urllib.parse.urljoin(url, a['href']))
                             parsed = urllib.parse.urlsplit(href)
-                            if parsed.scheme != 'https' or parsed.netloc.lower() != base_host:
+                            if parsed.scheme != 'https' or parsed.netloc.lower() != host:
                                 continue
-                            if re.search(r'\.(pdf|jpe?g|png|gif|zip|docx?|xlsx?)(?:$|\?)', parsed.path, re.I):
+                            if re.search(r'\.(pdf|jpe?g|png|gif|zip|docx?|xlsx?)$', parsed.path, re.I):
                                 continue
-                            label = anchor.get_text(' ', strip=True)
-                            candidate_label = normalized_text(label + ' ' + href)
-                            if any(word in candidate_label for word in LINK_WORDS) and href not in visited:
+                            label = norm(a.get_text(' ', strip=True) + ' ' + href)
+                            if any(word in label for word in LINK_WORDS) and href not in visited:
                                 queue.append((href, depth + 1))
                     time.sleep(0.3)
                 except requests.RequestException as exc:
@@ -160,37 +215,39 @@ def main():
         elif kind == 'bluesky':
             handles = {h.lstrip('@').lower() for h in source.get('allowed_handles', []) if h}
             if not handles:
-                errors.append({'source': start, 'error': 'Bluesky skipped: allowed_handles is empty'})
+                print('[SKIP] Bluesky: no verified official handles', flush=True)
                 continue
             try:
-                response = session.get('https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts',
-                                       params={'q': source.get('query', 'ニッポンエール AKB48'),
-                                               'sort': 'latest', 'limit': 100}, timeout=18)
-                response.raise_for_status()
-                for post in response.json().get('posts', []):
+                res = session.get('https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts',
+                                  params={'q': source.get('query', 'ニッポンエール AKB48'),
+                                          'sort': 'latest', 'limit': 100}, timeout=18)
+                res.raise_for_status()
+                for post in res.json().get('posts', []):
                     stats['posts_checked'] += 1
                     handle = post.get('author', {}).get('handle', '').lower()
                     text = post.get('record', {}).get('text', '')
                     uri = post.get('uri', '')
                     if handle not in handles or not related(text) or not uri:
                         continue
-                    link = f'https://bsky.app/profile/{handle}/post/{uri.rsplit("/", 1)[-1]}'
-                    record(link, text[:220], handle, 'Bluesky公式アカウント（登録制）', text)
+                    post_url = f'https://bsky.app/profile/{handle}/post/{uri.rsplit("/", 1)[-1]}'
+                    record(post_url, text[:220], text, handle, 'Bluesky公式アカウント（登録制）')
             except (requests.RequestException, ValueError) as exc:
                 errors.append({'source': start, 'error': str(exc)[:240]})
 
-    merged = {**old, **found}
-    save('candidates.json', sorted(merged.values(), key=lambda x: x.get('first_seen', ''), reverse=True))
-    history = load('history.json', [])
+    # Drop historical listing-page false positives; keep other older candidates.
+    merged = {url: item for url, item in previous.items() if not is_listing(url)}
+    merged.update(found)
+    write_json('candidates.json', sorted(merged.values(), key=lambda x: x.get('first_seen', ''), reverse=True))
+    history = read_json('history.json', [])
     for url, item in found.items():
-        if url not in old:
+        if url not in previous:
             history.insert(0, {'at': now, 'type': '新規候補', 'title': item['title'], 'url': url})
-    save('history.json', history[:500])
-    new_count = sum(url not in old for url in found)
-    save('status.json', {'last_run': now, 'sources_configured': len(SOURCES),
-                         'new_candidates': new_count, 'candidates_total': len(merged),
-                         **stats, 'errors': errors[:100]})
-    print(f'Checked {stats["pages_checked"]} pages, {stats["posts_checked"]} posts; new {new_count}; errors {len(errors)}', flush=True)
+    write_json('history.json', history[:500])
+    new_count = sum(url not in previous for url in found)
+    write_json('status.json', {'last_run': now, 'sources_configured': len(SOURCES),
+                               'new_candidates': new_count, 'candidates_total': len(merged),
+                               **stats, 'errors': errors[:100]})
+    print(f'Checked {stats["pages_checked"]} pages; new {new_count}; candidates {len(merged)}; errors {len(errors)}', flush=True)
 
 
 if __name__ == '__main__':
