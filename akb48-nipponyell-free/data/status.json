@@ -1,11 +1,12 @@
 {
-  "last_run": "2026-10-16T01:49:04+09:00",
+  "last_run": "2026-10-16T01:53:01+09:00",
   "sources_configured": 4,
-  "new_candidates": 5,
-  "candidates_total": 5,
+  "new_candidates": 1,
+  "candidates_total": 4,
   "pages_checked": 70,
   "posts_checked": 0,
   "sources_enabled": 3,
+  "listing_pages_skipped": 7,
   "errors": [
     {
       "source": "https://www.nn.zennoh.or.jp/",

@@ -1,43 +1,24 @@
 [
   {
-    "title": "お知らせ一覧 | ニッポンエール",
-    "url": "https://www.zennoh.or.jp/nippon-yell/topics/index.html",
+    "title": "アパホテルと「ニッポンエール」のコラボ商品 「アパ社長ごはん55周年記念パッケージ ～ニッポンエールコラボ～」５月１０日発売！ | お知らせ一覧 | ニッポンエール",
+    "url": "https://www.zennoh.or.jp/nippon-yell/topics/2026/109249.html",
     "source_type": "JA公式サイト",
     "source": "https://www.zennoh.or.jp/nippon-yell/topics/index.html",
-    "first_seen": "2026-10-16T01:49:04+09:00",
-    "last_seen": "2026-10-16T01:49:04+09:00",
+    "first_seen": "2026-10-16T01:53:01+09:00",
+    "last_seen": "2026-10-16T01:53:01+09:00",
+    "category": "関連ニュース",
     "dates_mentioned": [
-      "2026年8月24日",
-      "2026年8月10日",
-      "2026年7月21日",
-      " ７月１５日",
-      "2026年7月14日",
-      " ７月２０日",
-      "2026年7月9日",
-      " ７月８日"
+      "05-10 (年不明)",
+      "2026-04-27"
     ],
     "prefectures_mentioned": [
-      "北海道",
-      "青森",
-      "山形",
-      "栃木",
-      "東京",
-      "山梨",
-      "長野",
-      "大阪",
-      "兵庫",
-      "和歌山",
-      "岡山",
-      "広島",
-      "愛媛",
-      "福岡",
-      "熊本",
-      "大分",
-      "宮崎",
-      "沖縄"
+      "石川"
     ],
     "members": [],
-    "status": "要確認"
+    "status": "要確認",
+    "appearance_confirmed": false,
+    "event_date": null,
+    "venue": null
   },
   {
     "title": "アイドルグループＡＫＢ４８のYouTube新番組 「ＡＫＢ４８が行く！ニッポンエール 産地を応援、みんなで応援」が配信 | お知らせ一覧 | ニッポンエール",
@@ -45,16 +26,20 @@
     "source_type": "JA公式サイト",
     "source": "https://www.zennoh.or.jp/nippon-yell/topics/index.html",
     "first_seen": "2026-10-16T01:49:04+09:00",
-    "last_seen": "2026-10-16T01:49:04+09:00",
+    "last_seen": "2026-10-16T01:53:01+09:00",
     "dates_mentioned": [
-      "2026年04月09日",
-      "４月９日"
+      "2026-04-09",
+      "04-09 (年不明)"
     ],
     "prefectures_mentioned": [
       "広島"
     ],
     "members": [],
-    "status": "要確認"
+    "status": "要確認",
+    "category": "イベント関連の可能性・要確認",
+    "appearance_confirmed": false,
+    "event_date": null,
+    "venue": null
   },
   {
     "title": "アイドルグループＡＫＢ４８が 「ニッポンエールブランドアンバサダー」に就任 | お知らせ一覧 | ニッポンエール",
@@ -62,18 +47,22 @@
     "source_type": "JA公式サイト",
     "source": "https://www.zennoh.or.jp/nippon-yell/topics/index.html",
     "first_seen": "2026-10-16T01:49:04+09:00",
-    "last_seen": "2026-10-16T01:49:04+09:00",
+    "last_seen": "2026-10-16T01:53:01+09:00",
     "dates_mentioned": [
-      "2026年03月09日",
-      "３月９日",
-      "３月２２日"
+      "2026-03-09",
+      "03-09 (年不明)",
+      "03-22 (年不明)"
     ],
     "prefectures_mentioned": [
       "北海道",
       "沖縄"
     ],
     "members": [],
-    "status": "要確認"
+    "status": "要確認",
+    "category": "イベント関連の可能性・要確認",
+    "appearance_confirmed": false,
+    "event_date": null,
+    "venue": null
   },
   {
     "title": "ニッポンエールプロジェクト協議会第７弾「北海道酪農応援 ～牛乳・乳製品の消費拡大～」 新商品記者発表会を開催 | お知らせ一覧 | ニッポンエール",
@@ -81,16 +70,16 @@
     "source_type": "JA公式サイト",
     "source": "https://www.zennoh.or.jp/nippon-yell/topics/index.html",
     "first_seen": "2026-10-16T01:49:04+09:00",
-    "last_seen": "2026-10-16T01:49:04+09:00",
+    "last_seen": "2026-10-16T01:53:01+09:00",
     "dates_mentioned": [
-      "2026年03月09日",
-      "３月６日",
-      "３月１４日",
-      "３月２０",
-      "３月２８",
-      "３月２０日",
-      "３月２８日",
-      "8-2 "
+      "2026-03-09",
+      "03-06 (年不明)",
+      "03-14 (年不明)",
+      "03-20 (年不明)",
+      "03-28 (年不明)",
+      "08-02 (年不明)",
+      "03-07 (年不明)",
+      "03-19 (年不明)"
     ],
     "prefectures_mentioned": [
       "北海道",
@@ -101,51 +90,10 @@
       "宮崎"
     ],
     "members": [],
-    "status": "要確認"
-  },
-  {
-    "title": "ニュースリリース | ＪＡ全農",
-    "url": "https://www.zennoh.or.jp/press/release/index.html",
-    "source_type": "JA公式サイト",
-    "source": "https://www.zennoh.or.jp/",
-    "first_seen": "2026-10-16T01:49:04+09:00",
-    "last_seen": "2026-10-16T01:49:04+09:00",
-    "dates_mentioned": [
-      "2026年10月15日",
-      "2026年10月14日",
-      "2026年10月13日",
-      "2026年10月9日",
-      " １０月１２日",
-      "１１月１６日",
-      "2026年10月7日",
-      "2026年10月5日"
-    ],
-    "prefectures_mentioned": [
-      "北海道",
-      "青森",
-      "山形",
-      "福島",
-      "茨城",
-      "栃木",
-      "千葉",
-      "東京",
-      "新潟",
-      "石川",
-      "山梨",
-      "長野",
-      "愛知",
-      "大阪",
-      "兵庫",
-      "和歌山",
-      "岡山",
-      "福岡",
-      "佐賀",
-      "熊本",
-      "大分",
-      "鹿児島",
-      "沖縄"
-    ],
-    "members": [],
-    "status": "要確認"
+    "status": "要確認",
+    "category": "出演関連の可能性・要確認",
+    "appearance_confirmed": false,
+    "event_date": null,
+    "venue": null
   }
 ]
