@@ -1,29 +1,8 @@
-
 [
-  {
-    "type": "website",
-    "url": "https://www.zennoh.or.jp/nippon-yell/topics/index.html",
-    "enabled": true,
-    "note": "ニッポンエール公式お知らせ一覧。AKB48関連告知を含む"
-  },
-  {
-    "type": "website",
-    "url": "https://www.zennoh.or.jp/",
-    "enabled": true,
-    "note": "JA全農公式トップページ"
-  },
-  {
-    "type": "website",
-    "url": "https://www.nn.zennoh.or.jp/",
-    "enabled": true,
-    "note": "JA全農長野公式サイト"
-  },
-  {
-    "type": "bluesky",
-    "url": "https://public.api.bsky.app/",
-    "query": "ニッポンエール AKB48",
-    "allowed_handles": [],
-    "enabled": false,
-    "note": "公式アカウントを確認するまで無効"
-  }
+  {"type":"website","url":"https://www.zennoh.or.jp/nippon-yell/topics/index.html","enabled":true,"scope":"national","note":"ニッポンエール公式お知らせ"},
+  {"type":"website","url":"https://www.zennoh.or.jp/","enabled":true,"scope":"national","note":"JA全農公式トップ"},
+  {"type":"website","url":"https://www.zennoh-weekly.jp/wp/article_type/prefnews","enabled":true,"scope":"regional","note":"全農ウィークリー県本部だより"},
+  {"type":"website","url":"https://www.zennoh.or.jp/tc/","enabled":true,"scope":"regional","note":"JA全農とちぎ"},
+  {"type":"directory","url":"https://www.nn.zennoh.or.jp/jigyou/group/","enabled":false,"note":"県別公式リンク集。robots制限が解消されるまで無効"},
+  {"type":"bluesky","url":"https://public.api.bsky.app/","query":"ニッポンエール AKB48","allowed_handles":[],"enabled":false,"note":"公式ハンドル確認後に有効化"}
 ]
