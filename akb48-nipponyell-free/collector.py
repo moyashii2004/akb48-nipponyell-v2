@@ -43,7 +43,30 @@ def main():
      href=urllib.parse.urljoin(url,a['href']);host=urllib.parse.urlsplit(href).netloc
      if host!=urllib.parse.urlsplit(url).netloc:continue
      title=a.get_text(' ',strip=True)[:220]
-     if not relevant(title+' '+href):continue
+    
+     if not relevant(title+' '+href):
+      continue
+     try:
+      if allowed(href):
+       article = requests.get(
+        href, headers=HEAD, timeout=18
+       )
+       article.raise_for_status()
+       article_soup = BeautifulSoup(
+        article.text, 'html.parser'
+       )
+       for element in article_soup(
+        ['script', 'style', 'nav', 'footer']
+       ):
+        element.decompose()
+       article_text = article_soup.get_text(
+        ' ', strip=True
+       )[:12000]
+      else:
+       article_text = title
+     except requests.RequestException:
+      article_text = title
+
      found[href]={'title':title or href,'url':href,'source_type':'JA公式サイト','source':url,'first_seen':prev.get(href,{}).get('first_seen',now),'last_seen':now,**classify(title)}
    except Exception as e:errors.append({'source':url,'error':str(e)[:250]})
   elif kind=='bluesky':
