@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent
 DATA = ROOT / 'data'
 DATA.mkdir(exist_ok=True)
 SOURCES = json.loads((ROOT / 'sources.json').read_text(encoding='utf-8'))
-USER_AGENT = 'AKB48-NipponYell-PersonalTracker/1.3 (public pages only)'
+USER_AGENT = 'AKB48-NipponYell-PersonalTracker/1.4 (public pages only)'
 MAX_PAGES_PER_SOURCE = 35
 MAX_DEPTH = 2
 PREFS = ('北海道 青森 岩手 宮城 秋田 山形 福島 茨城 栃木 群馬 埼玉 千葉 東京 神奈川 '
@@ -71,6 +71,12 @@ def page_parts(soup):
     return title, text[:20000]
 
 
+def relevant_article(title, text):
+    """Require AKB48 in the article headline, not incidental body/sidebar text."""
+    headline = norm(title.split(' | ')[0])
+    return 'akb48' in headline and related(title + ' ' + text)
+
+
 def classify(title, text):
     normalized = norm(title + ' ' + text)
     dates = []
@@ -86,14 +92,10 @@ def classify(title, text):
                 dates.append(date)
         except ValueError:
             pass
-    if '出演' in normalized or '来場' in normalized or '登場' in normalized:
-        category = '出演関連の可能性・要確認'
-    elif any(word in normalized for word in EVENT_WORDS):
-        category = 'イベント関連の可能性・要確認'
-    else:
-        category = '関連ニュース'
+    # An event word anywhere on the page is not evidence of an AKB48 appearance.
+    # Keep news separate until a human verifies the actual event and participants.
     return {
-        'category': category,
+        'category': 'AKB48関連ニュース（出演未確認）',
         'dates_mentioned': dates[:12],
         'prefectures_mentioned': [p for p in PREFS if p in normalized],
         'members': [],
@@ -194,7 +196,7 @@ def main():
                     if is_listing(url):
                         stats['listing_pages_skipped'] += 1
                         print(f'[LISTING] not a candidate: {url}', flush=True)
-                    elif related(content):
+                    elif relevant_article(title, text):
                         record(url, title, text, start, 'JA公式サイト')
                         print(f'[CANDIDATE] {url}', flush=True)
                     if depth < MAX_DEPTH:
@@ -234,8 +236,14 @@ def main():
             except (requests.RequestException, ValueError) as exc:
                 errors.append({'source': start, 'error': str(exc)[:240]})
 
-    # Drop historical listing-page false positives; keep other older candidates.
-    merged = {url: item for url, item in previous.items() if not is_listing(url)}
+    # Remove historical listing pages and unrelated headlines. Preserve manually verified items.
+    merged = {
+        url: item for url, item in previous.items()
+        if not is_listing(url) and (
+            item.get('appearance_confirmed') is True
+            or relevant_article(item.get('title', ''), item.get('title', ''))
+        )
+    }
     merged.update(found)
     write_json('candidates.json', sorted(merged.values(), key=lambda x: x.get('first_seen', ''), reverse=True))
     history = read_json('history.json', [])
