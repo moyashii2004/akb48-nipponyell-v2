@@ -67,7 +67,7 @@ def main():
      except requests.RequestException:
       article_text = title
 
-     found[href]={'title':title or href,'url':href,'source_type':'JA公式サイト','source':url,'first_seen':prev.get(href,{}).get('first_seen',now),'last_seen':now,**classify(title)}
+     found[href]={'title':title or href,'url':href,'source_type':'JA公式サイト','source':url,'first_seen':prev.get(href,{}).get('first_seen',now),'last_seen':now,**classify(article_text)
    except Exception as e:errors.append({'source':url,'error':str(e)[:250]})
   elif kind=='bluesky':
    try:
