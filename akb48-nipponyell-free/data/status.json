@@ -1,12 +1,17 @@
 {
-  "last_run": "2026-10-21T15:29:38+09:00",
+  "last_run": "2026-10-21T21:29:32+09:00",
   "sources_configured": 6,
   "new_candidates": 0,
   "candidates_total": 3,
-  "pages_checked": 140,
+  "pages_checked": 105,
   "posts_checked": 0,
   "sources_enabled": 4,
-  "listing_pages_skipped": 16,
+  "listing_pages_skipped": 11,
   "sources_checked": 4,
-  "errors": []
+  "errors": [
+    {
+      "source": "https://www.zennoh-weekly.jp/wp/article_type/prefnews",
+      "error": "robots.txt disallows or unavailable"
+    }
+  ]
 }
